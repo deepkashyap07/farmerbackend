@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, send_file
 from flask_cors import CORS
 import numpy as np
 import pickle
@@ -19,12 +19,8 @@ app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
 # Configure CORS
-
-
 CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://your-frontend-domain.com"], 
                              "supports_credentials": True}})
-
-
 
 # Register Auth Routes
 app.register_blueprint(auth_bp, url_prefix="/auth")
@@ -38,6 +34,22 @@ crop_dict = {
     20: "Kidneybeans", 21: "Chickpea", 22: "Coffee"
 }
 
+# 🏠 Home Route
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "message": "Welcome to the Farmer Backend API! 🌱",
+        "routes": {
+            "Home": "/",
+            "Login": "/auth/login",
+            "Register": "/auth/register",
+            "Refresh": "/auth/refresh",
+            "Logout": "/auth/logout",
+            "Predict": "/predict"
+        }
+    })
+
+# 🌾 Predict Route
 @app.route("/predict", methods=["POST"])
 @login_required
 def predict():
@@ -66,4 +78,4 @@ def predict():
         return jsonify({"error": "An error occurred during prediction"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True,port=5000)
+    app.run(debug=True, port=5000)
