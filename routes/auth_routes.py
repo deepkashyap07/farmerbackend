@@ -19,7 +19,7 @@ def set_auth_cookies(response, access_token, refresh_token):
     response.set_cookie(
         key=config.REFRESH_TOKEN_NAME,
         value=refresh_token,
-        max_age=60 * 60 * 24 * int(config.REFRESH_EXPIRY_DAYS),  # e.g., 7 days
+        max_age=60 * 60 * 24 *7,  # e.g., 7 days
         path='/'
         
     )
@@ -69,6 +69,7 @@ def refresh():
     if not refresh_token:
         return jsonify({"error": "No refresh token provided"}), 401
 
+
     new_access_token, new_refresh_token = refresh_user_token(refresh_token)
     if not new_access_token:
         return jsonify({"error": "Invalid refresh token"}), 401
@@ -80,6 +81,6 @@ def refresh():
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
     response = make_response(jsonify({"success": True, "message": "Logged out successfully"}))
-    response.delete_cookie(config.COOKIE_NAME, samesite="None" if IS_PROD else "Lax", secure=IS_PROD, path='/')
-    response.delete_cookie(config.REFRESH_TOKEN_NAME, samesite="None" if IS_PROD else "Lax", secure=IS_PROD, path='/')
+    response.delete_cookie(config.COOKIE_NAME, samesite="None" , path='/')
+    response.delete_cookie(config.REFRESH_TOKEN_NAME, samesite="None" , path='/')
     return response
