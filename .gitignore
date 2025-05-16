@@ -1,0 +1,17 @@
+.env
+virtualenv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.egg-info/
+*.egg
+*.zip
+*.tar.gz
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz     
