@@ -9,6 +9,6 @@ REFRESH_TOKEN_NAME = os.getenv("REFRESH_TOKEN_NAME", "refresh_token")
 REFRESH_EXPIRY_DAYS = int(os.getenv("REFRESH_EXPIRY_DAYS", "7"))
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/mydatabase")
 JWT_EXPIRY_SECONDS = int(os.getenv("JWT_EXPIRY_SECONDS", "3600"))
-PORT = int(os.getenv("PORT") or 5000)
-HOST = os.getenv("HOST") or "0.0.0.0"
+PORT = int(os.getenv("PORT", 5000))
+HOST = os.getenv("HOST", "0.0.0.0")
 
