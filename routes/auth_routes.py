@@ -13,14 +13,18 @@ def set_auth_cookies(response, access_token, refresh_token):
         key=config.COOKIE_NAME,
         value=access_token,
         max_age=60 * 15,      # 15 minutes or your token expiry
-        path='/'
+        path='/',
+         secure=True,          # REQUIRED for cross-origin cookies
+        samesite="None"
     )
     # Set refresh token cookie
     response.set_cookie(
         key=config.REFRESH_TOKEN_NAME,
         value=refresh_token,
         max_age=60 * 60 * 24 *7,  # e.g., 7 days
-        path='/'
+        path='/',
+        secure=True,          # REQUIRED for cross-origin cookies
+        samesite="None"
         
     )
     return response
