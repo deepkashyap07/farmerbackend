@@ -19,8 +19,7 @@ app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
 # Configure CORS
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://your-frontend-domain.com"], 
-                             "supports_credentials": True}})
+CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
 
 # Register Auth Routes
 app.register_blueprint(auth_bp, url_prefix="/auth")

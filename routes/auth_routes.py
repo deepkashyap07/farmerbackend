@@ -6,16 +6,12 @@ import os
 auth_bp = Blueprint("auth", __name__)
 
 # Determine if the app is running in production
-IS_PROD = os.getenv("FLASK_ENV") == "production"
 
 def set_auth_cookies(response, access_token, refresh_token):
     # Set access token cookie
     response.set_cookie(
         key=config.COOKIE_NAME,
         value=access_token,
-        httponly=True,
-        secure=IS_PROD,       # Secure only in production
-        samesite='None' if IS_PROD else 'Lax',
         max_age=60 * 15,      # 15 minutes or your token expiry
         path='/'
     )
@@ -23,11 +19,9 @@ def set_auth_cookies(response, access_token, refresh_token):
     response.set_cookie(
         key=config.REFRESH_TOKEN_NAME,
         value=refresh_token,
-        httponly=True,
-        secure=IS_PROD,
-        samesite='None' if IS_PROD else 'Lax',
         max_age=60 * 60 * 24 * int(config.REFRESH_EXPIRY_DAYS),  # e.g., 7 days
         path='/'
+        
     )
     return response
 
