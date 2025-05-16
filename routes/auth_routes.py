@@ -1,15 +1,35 @@
 from flask import Blueprint, request, jsonify, make_response
-from models.user import register_user, authenticate_user, verify_token, refresh_user_token
-from flask_cors import CORS
+from models.user import register_user, authenticate_user, refresh_user_token
 import config
+import os
 
 auth_bp = Blueprint("auth", __name__)
 
-# Enable CORS for this Blueprint
-CORS(auth_bp, supports_credentials=True, origins=[
-    "http://localhost:5173", 
-    "https://farmerfrontend.vercel.app"
-])
+# Determine if the app is running in production
+IS_PROD = os.getenv("FLASK_ENV") == "production"
+
+def set_auth_cookies(response, access_token, refresh_token):
+    # Set access token cookie
+    response.set_cookie(
+        key=config.COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=IS_PROD,       # Secure only in production
+        samesite='None' if IS_PROD else 'Lax',
+        max_age=60 * 15,      # 15 minutes or your token expiry
+        path='/'
+    )
+    # Set refresh token cookie
+    response.set_cookie(
+        key=config.REFRESH_TOKEN_NAME,
+        value=refresh_token,
+        httponly=True,
+        secure=IS_PROD,
+        samesite='None' if IS_PROD else 'Lax',
+        max_age=60 * 60 * 24 * int(config.REFRESH_EXPIRY_DAYS),  # e.g., 7 days
+        path='/'
+    )
+    return response
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
@@ -22,7 +42,14 @@ def register():
         return jsonify({"error": "All fields are required"}), 400
 
     result = register_user(username, email, password)
-    return jsonify(result), 201 if result.get("success") else 400
+    if not result.get("success"):
+        return jsonify(result), 400
+
+    # Generate tokens after successful registration
+    access_token, refresh_token = authenticate_user(email, password)
+    response = make_response(jsonify({"success": True, "message": "Registration successful"}))
+    response = set_auth_cookies(response, access_token, refresh_token)
+    return response
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
@@ -37,32 +64,8 @@ def login():
     if not access_token:
         return jsonify({"error": "Invalid credentials"}), 401
 
-    # Set cookies for cross-origin requests
     response = make_response(jsonify({"success": True, "message": "Login successful"}))
-    response.set_cookie(
-        config.COOKIE_NAME, 
-        access_token, 
-        httponly=True, 
-        secure=True, 
-        samesite="None", 
-        domain="farmerbackend.vercel.app"
-    )
-    response.set_cookie(
-        config.REFRESH_TOKEN_NAME, 
-        refresh_token, 
-        httponly=True, 
-        secure=True, 
-        samesite="None", 
-        domain="farmerbackend.vercel.app", 
-        max_age=60*60*24*int(config.REFRESH_EXPIRY_DAYS)
-    )
-    return response
-
-@auth_bp.route("/logout", methods=["POST"])
-def logout():
-    response = make_response(jsonify({"success": True, "message": "Logged out successfully"}))
-    response.delete_cookie(config.COOKIE_NAME, samesite="None", secure=True, domain="farmerbackend.vercel.app")
-    response.delete_cookie(config.REFRESH_TOKEN_NAME, samesite="None", secure=True, domain="farmerbackend.vercel.app")
+    response = set_auth_cookies(response, access_token, refresh_token)
     return response
 
 @auth_bp.route("/refresh", methods=["POST"])
@@ -76,27 +79,13 @@ def refresh():
     if not new_access_token:
         return jsonify({"error": "Invalid refresh token"}), 401
 
-    response = make_response(jsonify({"success": True}))
+    response = make_response(jsonify({"success": True, "message": "Token refreshed"}))
+    response = set_auth_cookies(response, new_access_token, new_refresh_token)
+    return response
 
-    # Set the access token
-    response.set_cookie(
-        config.COOKIE_NAME,
-        new_access_token,
-        httponly=True,
-        secure=True,
-        samesite="None",
-        domain="farmerbackend.vercel.app"
-    )
-
-    # Set the refresh token
-    response.set_cookie(
-        config.REFRESH_TOKEN_NAME,
-        new_refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="None",
-        domain="farmerbackend.vercel.app",
-        max_age=60 * 60 * 24 * int(config.REFRESH_EXPIRY_DAYS)
-    )
-
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+    response = make_response(jsonify({"success": True, "message": "Logged out successfully"}))
+    response.delete_cookie(config.COOKIE_NAME, samesite="None" if IS_PROD else "Lax", secure=IS_PROD, path='/')
+    response.delete_cookie(config.REFRESH_TOKEN_NAME, samesite="None" if IS_PROD else "Lax", secure=IS_PROD, path='/')
     return response
