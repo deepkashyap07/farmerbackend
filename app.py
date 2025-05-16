@@ -78,4 +78,4 @@ def predict():
         return jsonify({"error": "An error occurred during prediction"}), 500
 
 if __name__ == "__main__":
-    app.run(host=config.HOST, port=config.PORT, debug=True)
+    app.run()
