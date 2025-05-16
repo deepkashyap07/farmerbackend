@@ -30,17 +30,17 @@ def login():
     if not access_token:
         return jsonify({"error": "Invalid credentials"}), 401
 
-    # Set cookies
+    # Set cookies with SameSite=None for cross-origin requests
     response = make_response(jsonify({"success": True, "message": "Login successful"}))
-    response.set_cookie(config.COOKIE_NAME, access_token, httponly=True, secure=True, samesite="Strict")
-    response.set_cookie(config.REFRESH_TOKEN_NAME, refresh_token, httponly=True, secure=True, samesite="Strict", max_age=60*60*24*int(config.REFRESH_EXPIRY_DAYS))
+    response.set_cookie(config.COOKIE_NAME, access_token, httponly=True, secure=True, samesite="None")
+    response.set_cookie(config.REFRESH_TOKEN_NAME, refresh_token, httponly=True, secure=True, samesite="None", max_age=60*60*24*int(config.REFRESH_EXPIRY_DAYS))
     return response
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
     response = make_response(jsonify({"success": True, "message": "Logged out successfully"}))
-    response.delete_cookie(config.COOKIE_NAME)
-    response.delete_cookie(config.REFRESH_TOKEN_NAME)
+    response.delete_cookie(config.COOKIE_NAME, samesite="None", secure=True)
+    response.delete_cookie(config.REFRESH_TOKEN_NAME, samesite="None", secure=True)
     return response
 
 @auth_bp.route("/refresh", methods=["POST"])
@@ -53,9 +53,8 @@ def refresh():
     if not new_access_token:
         return jsonify({"error": "Invalid refresh token"}), 401
 
-    # Set new tokens
+    # Set new tokens with SameSite=None for cross-origin requests
     response = make_response(jsonify({"success": True}))
-    response.set_cookie(config.COOKIE_NAME, new_access_token, httponly=True, secure=True, samesite="Strict")
-    response.set_cookie(config.REFRESH_TOKEN_NAME, new_refresh_token, httponly=True, secure=True, samesite="Strict", max_age=60*60*24*int(config.REFRESH_EXPIRY_DAYS))
+    response.set_cookie(config.COOKIE_NAME, new_access_token, httponly=True, secure=True, samesite="None")
+    response.set_cookie(config.REFRESH_TOKEN_NAME, new_refresh_token, httponly=True, secure=True, samesite="None", max_age=60*60*24*int(config.REFRESH_EXPIRY_DAYS))
     return response
-
