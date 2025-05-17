@@ -14,7 +14,7 @@ def set_auth_cookies(response, access_token, refresh_token):
         value=access_token,
         max_age=60 * 15,      # 15 minutes or your token expiry
         path='/',
-         secure=False,          # REQUIRED for cross-origin cookies
+         secure=True,          # REQUIRED for cross-origin cookies
         samesite="None"
     )
     # Set refresh token cookie
@@ -23,7 +23,7 @@ def set_auth_cookies(response, access_token, refresh_token):
         value=refresh_token,
         max_age=60 * 60 * 24 *7,  # e.g., 7 days
         path='/',
-        secure=False,          # REQUIRED for cross-origin cookies
+        secure=True,          # REQUIRED for cross-origin cookies
         samesite="None"
         
     )
@@ -85,6 +85,6 @@ def refresh():
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
     response = make_response(jsonify({"success": True, "message": "Logged out successfully"}))
-    response.delete_cookie(config.COOKIE_NAME, secure=False,samesite="None" , path='/')
-    response.delete_cookie(config.REFRESH_TOKEN_NAME,  secure=False,samesite="None", path='/')
+    response.delete_cookie(config.COOKIE_NAME, secure=True,samesite="None" , path='/')
+    response.delete_cookie(config.REFRESH_TOKEN_NAME,  secure=True,samesite="None", path='/')
     return response
